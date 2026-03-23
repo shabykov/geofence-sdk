@@ -3,6 +3,7 @@ module github.com/shabykov/geofence-sdk
 go 1.25.7
 
 require (
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/tidwall/geojson v1.4.6
 	github.com/tidwall/rtree v1.10.0
 )

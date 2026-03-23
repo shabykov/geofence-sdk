@@ -1,27 +1,13 @@
 package pkg
 
 import (
-	"container/list"
 	"math"
-	"sync"
-)
 
-// lruCache caches Lookup results keyed by quantized coordinates.
-// Points are snapped to a ~11m grid (4 decimal places).
-type lruCache struct {
-	mu       sync.Mutex
-	capacity int
-	items    map[cacheKey]*list.Element
-	order    *list.List
-}
+	lru "github.com/hashicorp/golang-lru/v2"
+)
 
 type cacheKey struct {
 	lat, lng int64
-}
-
-type cacheEntry struct {
-	key    cacheKey
-	result *Result
 }
 
 const precision = 1e4 // 4 decimal places ≈ 11m
@@ -30,55 +16,23 @@ func quantize(v float64) int64 {
 	return int64(math.Round(v * precision))
 }
 
+type lruCache struct {
+	c *lru.Cache[cacheKey, *Result]
+}
+
 func newLRUCache(capacity int) *lruCache {
-	return &lruCache{
-		capacity: capacity,
-		items:    make(map[cacheKey]*list.Element, capacity),
-		order:    list.New(),
-	}
+	c, _ := lru.New[cacheKey, *Result](capacity)
+	return &lruCache{c: c}
 }
 
 func (c *lruCache) get(lat, lng float64) (*Result, bool) {
-	key := cacheKey{quantize(lat), quantize(lng)}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if el, ok := c.items[key]; ok {
-		c.order.MoveToFront(el)
-		return el.Value.(*cacheEntry).result, true
-	}
-	return nil, false
+	return c.c.Get(cacheKey{quantize(lat), quantize(lng)})
 }
 
 func (c *lruCache) put(lat, lng float64, result *Result) {
-	key := cacheKey{quantize(lat), quantize(lng)}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if el, ok := c.items[key]; ok {
-		c.order.MoveToFront(el)
-		el.Value.(*cacheEntry).result = result
-		return
-	}
-
-	if c.order.Len() >= c.capacity {
-		oldest := c.order.Back()
-		if oldest != nil {
-			c.order.Remove(oldest)
-			delete(c.items, oldest.Value.(*cacheEntry).key)
-		}
-	}
-
-	entry := &cacheEntry{key: key, result: result}
-	el := c.order.PushFront(entry)
-	c.items[key] = el
+	c.c.Add(cacheKey{quantize(lat), quantize(lng)}, result)
 }
 
 func (c *lruCache) clear() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.items = make(map[cacheKey]*list.Element, c.capacity)
-	c.order.Init()
+	c.c.Purge()
 }
