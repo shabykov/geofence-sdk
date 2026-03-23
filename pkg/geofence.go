@@ -80,6 +80,40 @@ type Match struct {
 	Props    Props  `json:"-"`
 }
 
+func (m *Match) GetName() string {
+	if m == nil {
+		return ""
+	}
+	return m.Name
+}
+
+func (m *Match) GetLayer() Layer {
+	if m == nil {
+		return LayerUnknown
+	}
+	return Layer(m.Layer)
+}
+
+func (m *Match) GetISO() string {
+	if m == nil {
+		return ""
+	}
+	return m.ISO
+}
+func (m *Match) GetCurrency() string {
+	if m == nil {
+		return ""
+	}
+	return m.Currency
+}
+
+func (m *Match) GetProps() *Props {
+	if m == nil {
+		return nil
+	}
+	return &m.Props
+}
+
 // Result is the structured output of a Lookup.
 type Result struct {
 	Country  *Match  `json:"country,omitempty"`
@@ -257,17 +291,13 @@ func (e *Engine) Contains(lat, lng float64) bool {
 	point := geometry.Point{X: lng, Y: lat}
 	found := false
 
-	e.tree.Search(
-		[2]float64{lng, lat},
-		[2]float64{lng, lat},
-		func(_, _ [2]float64, zone *Zone) bool {
-			if zone.Object.Contains(geojson.NewPoint(point)) {
-				found = true
-				return false
-			}
-			return true
-		},
-	)
+	e.tree.Search([2]float64{lng, lat}, [2]float64{lng, lat}, func(_, _ [2]float64, zone *Zone) bool {
+		if zone.Object.Contains(geojson.NewPoint(point)) {
+			found = true
+			return false
+		}
+		return true
+	})
 
 	return found
 }
@@ -338,11 +368,7 @@ func (e *Engine) loadGenerated() error {
 			},
 		}
 		rect := feat.Rect()
-		e.tree.Insert(
-			[2]float64{rect.Min.X, rect.Min.Y},
-			[2]float64{rect.Max.X, rect.Max.Y},
-			zone,
-		)
+		e.tree.Insert([2]float64{rect.Min.X, rect.Min.Y}, [2]float64{rect.Max.X, rect.Max.Y}, zone)
 		e.zones = append(e.zones, zone)
 	}
 
@@ -376,11 +402,7 @@ func (e *Engine) loadGenerated() error {
 			},
 		}
 		rect := feat.Rect()
-		e.tree.Insert(
-			[2]float64{rect.Min.X, rect.Min.Y},
-			[2]float64{rect.Max.X, rect.Max.Y},
-			zone,
-		)
+		e.tree.Insert([2]float64{rect.Min.X, rect.Min.Y}, [2]float64{rect.Max.X, rect.Max.Y}, zone)
 		e.zones = append(e.zones, zone)
 	}
 
@@ -421,11 +443,7 @@ func (e *Engine) indexGeoJSON(data []byte, defaultLayer Layer) error {
 		}
 
 		rect := feat.Rect()
-		e.tree.Insert(
-			[2]float64{rect.Min.X, rect.Min.Y},
-			[2]float64{rect.Max.X, rect.Max.Y},
-			zone,
-		)
+		e.tree.Insert([2]float64{rect.Min.X, rect.Min.Y}, [2]float64{rect.Max.X, rect.Max.Y}, zone)
 		e.zones = append(e.zones, zone)
 		count++
 
@@ -439,23 +457,19 @@ func (e *Engine) findAll(lat, lng float64) []Match {
 	point := geometry.Point{X: lng, Y: lat}
 	var matches []Match
 
-	e.tree.Search(
-		[2]float64{lng, lat},
-		[2]float64{lng, lat},
-		func(_, _ [2]float64, zone *Zone) bool {
-			if zone.Object.Contains(geojson.NewPoint(point)) {
-				iso := zone.Props.Str("iso_a3")
-				matches = append(matches, Match{
-					Name:     zone.Props.Str("name"),
-					Layer:    zone.Layer,
-					ISO:      iso,
-					Currency: e.currencies[iso],
-					Props:    zone.Props,
-				})
-			}
-			return true
-		},
-	)
+	e.tree.Search([2]float64{lng, lat}, [2]float64{lng, lat}, func(_, _ [2]float64, zone *Zone) bool {
+		if zone.Object.Contains(geojson.NewPoint(point)) {
+			iso := zone.Props.Str("iso_a3")
+			matches = append(matches, Match{
+				Name:     zone.Props.Str("name"),
+				Layer:    zone.Layer,
+				ISO:      iso,
+				Currency: e.currencies[iso],
+				Props:    zone.Props,
+			})
+		}
+		return true
+	})
 
 	return matches
 }
