@@ -2,26 +2,30 @@ package pkg
 
 import (
 	"math"
+	"time"
 
-	lru "github.com/hashicorp/golang-lru/v2"
+	lru "github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 type cacheKey struct {
 	lat, lng int64
 }
 
-const precision = 1e4 // 4 decimal places ≈ 11m
+const (
+	precision = 1e4       // 4 decimal places ≈ 11m
+	ttl       = time.Hour // expire after 1 hour
+)
 
 func quantize(v float64) int64 {
 	return int64(math.Round(v * precision))
 }
 
 type lruCache struct {
-	c *lru.Cache[cacheKey, *Result]
+	c *lru.LRU[cacheKey, *Result]
 }
 
 func newLRUCache(capacity int) *lruCache {
-	c, _ := lru.New[cacheKey, *Result](capacity)
+	c := lru.NewLRU[cacheKey, *Result](capacity, nil, ttl)
 	return &lruCache{c: c}
 }
 

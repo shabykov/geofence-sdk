@@ -175,8 +175,7 @@ Lookup(lat, lng)
 - Geodata compiled into binary as Go literals — zero I/O, no JSON parsing at init
 - R-tree from `tidwall/rtree` — one of the fastest spatial indexes in Go
 - Zones built at init via `tidwall/geojson` programmatic constructors
-- LRU cache with ~11m grid quantization (10K entries default)
-- Thread-safe: `sync.RWMutex` on tree, separate mutex on cache
+- LRU `hashicorp/golang-lru` with ~11m grid quantization (10K entries default) and ttl (1 hour)
 
 ## Makefile
 
