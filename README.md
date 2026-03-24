@@ -5,6 +5,8 @@ Single `go get`, no external API calls, microsecond lookups.
 
 > \* Only depends on `tidwall/geojson` + `tidwall/rtree` + `hashicorp/golang-lru` for the spatial index.
 
+Originally an internal package, now open-sourced and free to use.
+
 ## Quick Start
 
 ```go
