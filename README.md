@@ -3,7 +3,7 @@
 Zero-dependency\* client-side geofencing with pre-bundled country and city polygons.
 Single `go get`, no external API calls, microsecond lookups.
 
-> \* Only depends on `tidwall/geojson` + `tidwall/rtree` for the spatial index.
+> \* Only depends on `tidwall/geojson` + `tidwall/rtree` + `hashicorp/golang-lru` for the spatial index.
 
 ## Quick Start
 
