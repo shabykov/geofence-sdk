@@ -51,7 +51,7 @@ func Contains(lat, lng float64) (bool, error)
 
 // LoadLayer adds a custom GeoJSON FeatureCollection at runtime.
 // Supports layers: LayerCountry, LayerRegion, LayerDistrict, LayerCity, LayerCustom.
-func LoadLayer(name string, data []byte, layer Layer) error
+func LoadLayer(data []byte, layer Layer) error
 
 // ZoneCount returns the total number of indexed zones.
 func ZoneCount() (int, error)
@@ -117,7 +117,7 @@ ok, _      := geofence.Contains(43.25, 76.94) // true
 
 // Runtime custom layer
 data, _ := os.ReadFile("districts.geojson")
-geofence.LoadLayer("districts", data, geofence.LayerDistrict)
+geofence.LoadLayer(data, geofence.LayerDistrict)
 
 result, _ = geofence.Lookup(43.25, 76.94)
 fmt.Println(result.District.Name) // "Medeu"

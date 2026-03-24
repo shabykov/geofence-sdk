@@ -237,7 +237,7 @@ func TestLoadCustomLayer(t *testing.T) {
 		}]
 	}`
 
-	err := LoadLayer("districts", []byte(districtJSON), LayerDistrict)
+	err := LoadLayer([]byte(districtJSON), LayerDistrict)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,12 +253,11 @@ func TestLoadCustomLayer(t *testing.T) {
 	if result.District.Name != "Medeu" {
 		t.Errorf("expected Medeu, got %q", result.District.Name)
 	}
-
 	// should still have country + city
-	if result.Country == nil {
+	if result.Country.Name != "Kazakhstan" {
 		t.Error("lost country after LoadLayer")
 	}
-	if result.City == nil {
+	if result.City.Name != "Almaty" {
 		t.Error("lost city after LoadLayer")
 	}
 }

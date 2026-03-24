@@ -218,7 +218,7 @@ func Currency(lat, lng float64) (string, error) {
 }
 
 // LoadLayer adds a custom GeoJSON layer at runtime.
-func LoadLayer(name string, data []byte, layer Layer) error {
+func LoadLayer(data []byte, layer Layer) error {
 	e, err := getEngine()
 	if err != nil {
 		return err
